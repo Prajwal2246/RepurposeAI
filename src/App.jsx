@@ -36,11 +36,20 @@ const BrandIcon = ({ platform, className }) => {
 };
 
 // --- 2. CARD COMPONENT ---
-const ResultCard = ({ title, badge, content, secondaryContent, platform, colorClass }) => {
+const ResultCard = ({
+  title,
+  badge,
+  content,
+  secondaryContent,
+  platform,
+  colorClass,
+}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    const fullText = secondaryContent ? `${content}\n\n${secondaryContent}` : content;
+    const fullText = secondaryContent
+      ? `${content}\n\n${secondaryContent}`
+      : content;
     await navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -50,25 +59,40 @@ const ResultCard = ({ title, badge, content, secondaryContent, platform, colorCl
     <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col h-full transition-all duration-300 hover:shadow-2xl hover:border-indigo-200 group">
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-opacity-100 flex items-center justify-center`}>
+          <div
+            className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-opacity-100 flex items-center justify-center`}
+          >
             <div className={colorClass.replace("bg-", "text-")}>
-              {platform === "SEO" ? <Search size={22} fill="lightblue" /> : <BrandIcon platform={platform} className="w-5 h-5 " />}
+              {platform === "SEO" ? (
+                <Search size={22} fill="lightblue" />
+              ) : (
+                <BrandIcon platform={platform} className="w-5 h-5 " />
+              )}
             </div>
           </div>
           <div>
             <h3 className="font-bold text-slate-800 text-[15px]">{title}</h3>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">{badge}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">
+              {badge}
+            </span>
           </div>
         </div>
-        <button onClick={handleCopy} className="p-2.5 rounded-xl transition-all bg-slate-50 hover:bg-indigo-600 text-slate-400 hover:text-white">
+        <button
+          onClick={handleCopy}
+          className="p-2.5 rounded-xl transition-all bg-slate-50 hover:bg-indigo-600 text-slate-400 hover:text-white"
+        >
           {copied ? <Check size={16} /> : <Copy size={16} />}
         </button>
       </div>
       <div className="flex-grow flex flex-col">
-        <div className="text-[14px] leading-relaxed text-slate-600 whitespace-pre-wrap font-medium mb-4">{content}</div>
+        <div className="text-[14px] leading-relaxed text-slate-600 whitespace-pre-wrap font-medium mb-4">
+          {content}
+        </div>
         {secondaryContent && (
           <div className="mt-auto p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[12px] text-slate-500 italic leading-snug">
-            <span className="block font-bold text-[10px] text-slate-400 uppercase mb-1 not-italic tracking-wider">Video Concept:</span>
+            <span className="block font-bold text-[10px] text-slate-400 uppercase mb-1 not-italic tracking-wider">
+              Video Concept:
+            </span>
             {secondaryContent}
           </div>
         )}
@@ -90,10 +114,18 @@ export default function App() {
   // We separate this so we can use it for both the local proxy AND the fallback proxy
   const parseHtml = (html) => {
     const doc = new DOMParser().parseFromString(html, "text/html");
-    const noiseSelectors = "script, style, nav, footer, header, aside, .sidebar, #comments, .ads, noscript";
+    const noiseSelectors =
+      "script, style, nav, footer, header, aside, .sidebar, #comments, .ads, noscript";
     doc.querySelectorAll(noiseSelectors).forEach((el) => el.remove());
 
-    const selectors = ["article", "main", "[role='main']", ".post-content", ".article-body", "#content"];
+    const selectors = [
+      "article",
+      "main",
+      "[role='main']",
+      ".post-content",
+      ".article-body",
+      "#content",
+    ];
     let mainElement = null;
 
     for (const selector of selectors) {
@@ -127,7 +159,9 @@ export default function App() {
     // 1. Attempt Custom Serverless Proxy (Preferred)
     try {
       console.log("Attempting Vercel Proxy...");
-      const res = await fetch(`/api/proxy?url=${encodeURIComponent(targetUrl)}`);
+      const res = await fetch(
+        `/api/scrape?url=${encodeURIComponent(targetUrl)}`,
+      );
       if (res.ok) {
         const html = await res.text();
         return parseHtml(html);
@@ -140,12 +174,17 @@ export default function App() {
     // 2. Fallback: CORS Proxy (Backup)
     try {
       console.log("Attempting Fallback Proxy...");
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+      const res = await fetch(
+        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+      );
       if (!res.ok) throw new Error("Both proxies failed.");
       const html = await res.text();
       return parseHtml(html);
     } catch (err) {
-      return { success: false, error: "Could not extract content. Site blocking bots." };
+      return {
+        success: false,
+        error: "Could not extract content. Site blocking bots.",
+      };
     }
   };
 
@@ -190,10 +229,15 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `${SYSTEM_INSTRUCTION}\n\n${prompt}` }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
+          contents: [
+            { parts: [{ text: `${SYSTEM_INSTRUCTION}\n\n${prompt}` }] },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.8,
+          },
         }),
-      }
+      },
     );
 
     const json = await response.json();
@@ -205,11 +249,15 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = activeTab === "url" ? await extractContentFromUrl(url) : { success: true, content: manualText };
-      
+      const result =
+        activeTab === "url"
+          ? await extractContentFromUrl(url)
+          : { success: true, content: manualText };
+
       if (!result.success) throw new Error(result.error);
-      if (!result.content || result.content.length < 50) throw new Error("Content too short to repurpose.");
-      
+      if (!result.content || result.content.length < 50)
+        throw new Error("Content too short to repurpose.");
+
       const data = await generateRepurposedContent(result.content);
       setResults(data);
     } catch (err) {
@@ -230,14 +278,22 @@ export default function App() {
             Repurpose<span className="text-indigo-600">.ai</span>
           </h1>
           <p className="text-slate-400 font-medium text-lg max-w-xl leading-relaxed">
-            Turn one article into a full week of high-performance social content.
+            Turn one article into a full week of high-performance social
+            content.
           </p>
         </header>
 
         <div className="max-w-2xl mx-auto bg-white rounded-[36px] p-5 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.08)] border border-slate-100 mb-20">
           <div className="flex bg-slate-50 rounded-[24px] p-1.5 mb-6">
-            {[["url", Globe, "WEBSITE LINK"], ["text", Type, "RAW TEXT"]].map(([id, Icon, label]) => (
-              <button key={id} onClick={() => setActiveTab(id)} className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[18px] text-[11px] font-black tracking-widest transition-all ${activeTab === id ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+            {[
+              ["url", Globe, "WEBSITE LINK"],
+              ["text", Type, "RAW TEXT"],
+            ].map(([id, Icon, label]) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[18px] text-[11px] font-black tracking-widest transition-all ${activeTab === id ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >
                 <Icon size={14} /> {label}
               </button>
             ))}
@@ -245,12 +301,32 @@ export default function App() {
 
           <form onSubmit={handleSubmit} className="space-y-5 px-2 pb-2">
             {activeTab === "url" ? (
-              <input type="url" placeholder="https://yourblog.com/post" className="w-full p-5 bg-slate-50 rounded-[22px] outline-none focus:ring-4 focus:ring-indigo-50/50 border-2 border-transparent focus:border-indigo-500 transition-all font-medium text-sm" value={url} onChange={(e) => setUrl(e.target.value)} required />
+              <input
+                type="url"
+                placeholder="https://yourblog.com/post"
+                className="w-full p-5 bg-slate-50 rounded-[22px] outline-none focus:ring-4 focus:ring-indigo-50/50 border-2 border-transparent focus:border-indigo-500 transition-all font-medium text-sm"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+              />
             ) : (
-              <textarea placeholder="Paste text here..." className="w-full p-5 bg-slate-50 rounded-[22px] min-h-[160px] outline-none focus:ring-4 focus:ring-indigo-50/50 border-2 border-transparent focus:border-indigo-500 transition-all font-medium text-sm" value={manualText} onChange={(e) => setManualText(e.target.value)} required />
+              <textarea
+                placeholder="Paste text here..."
+                className="w-full p-5 bg-slate-50 rounded-[22px] min-h-[160px] outline-none focus:ring-4 focus:ring-indigo-50/50 border-2 border-transparent focus:border-indigo-500 transition-all font-medium text-sm"
+                value={manualText}
+                onChange={(e) => setManualText(e.target.value)}
+                required
+              />
             )}
-            <button disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-5 rounded-[22px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-indigo-100 active:scale-[0.98]">
-              {loading ? <Loader2 className="animate-spin" /> : <TrendingUp size={20} />}
+            <button
+              disabled={loading}
+              className="w-full bg-indigo-600 text-white font-bold py-5 rounded-[22px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-indigo-100 active:scale-[0.98]"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <TrendingUp size={20} />
+              )}
               {loading ? "AI IS WORKING..." : "GENERATE CONTENT ASSETS"}
             </button>
           </form>
@@ -263,10 +339,41 @@ export default function App() {
 
         {results && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            {results.linkedinPosts.map((p, i) => <ResultCard key={`li-${i}`} title="LinkedIn" badge={p.angle} content={p.content} platform="LinkedIn" colorClass="bg-[#0077B5]" />)}
-            {results.twitterHooks.map((h, i) => <ResultCard key={`tw-${i}`} title="X / Twitter" badge={h.framing} content={h.content} platform="Twitter" colorClass="bg-[#000000]" />)}
-            <ResultCard title="SEO Meta" badge="Optimization" content={results.metaDescription} platform="SEO" colorClass="bg-[#10B981]" />
-            <ResultCard title="YouTube" badge="Strategy" content={results.videoScript.title} secondaryContent={results.videoScript.description} platform="YouTube" colorClass="bg-[#FF0000]" />
+            {results.linkedinPosts.map((p, i) => (
+              <ResultCard
+                key={`li-${i}`}
+                title="LinkedIn"
+                badge={p.angle}
+                content={p.content}
+                platform="LinkedIn"
+                colorClass="bg-[#0077B5]"
+              />
+            ))}
+            {results.twitterHooks.map((h, i) => (
+              <ResultCard
+                key={`tw-${i}`}
+                title="X / Twitter"
+                badge={h.framing}
+                content={h.content}
+                platform="Twitter"
+                colorClass="bg-[#000000]"
+              />
+            ))}
+            <ResultCard
+              title="SEO Meta"
+              badge="Optimization"
+              content={results.metaDescription}
+              platform="SEO"
+              colorClass="bg-[#10B981]"
+            />
+            <ResultCard
+              title="YouTube"
+              badge="Strategy"
+              content={results.videoScript.title}
+              secondaryContent={results.videoScript.description}
+              platform="YouTube"
+              colorClass="bg-[#FF0000]"
+            />
           </div>
         )}
       </div>
