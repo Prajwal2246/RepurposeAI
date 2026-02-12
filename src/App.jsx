@@ -121,6 +121,10 @@ export default function App() {
       const res = await fetch(
         `/api/proxy?url=${encodeURIComponent(targetUrl)}`,
       );
+
+      // 1. Check if the proxy itself failed
+      if (!res.ok) throw new Error(`Proxy error: ${res.status}`);
+
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
 
