@@ -199,7 +199,12 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = activeTab === "url" ? await extractContentFromUrl(url) : { success: true, content: manualText };
+      // CLEAN THE URL: Remove all whitespace/spaces from the input
+      const cleanUrl = url.replace(/\s+/g, '').trim(); 
+
+      const result = activeTab === "url" 
+        ? await extractContentFromUrl(cleanUrl) // Use cleanUrl here
+        : { success: true, content: manualText };
       
       if (!result.success) throw new Error(result.error);
       if (!result.content || result.content.length < 50) throw new Error("Content too short to repurpose.");
