@@ -119,7 +119,7 @@ export default function App() {
   const extractContentFromUrl = async (targetUrl) => {
     try {
       const res = await fetch(
-        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+        `/api/proxy?url=${encodeURIComponent(targetUrl)}`,
       );
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
